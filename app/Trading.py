@@ -35,8 +35,8 @@ TOKEN_COMMISION = 0.001
 BNB_COMMISION   = 0.0005
 #((eth*0.05)/100)
 
-
 class Trading():
+    pastLastBid = 0
 
     # Define trade vars  
     order_id = 0
@@ -384,7 +384,6 @@ class Trading():
     def action(self, symbol):
         #import ipdb; ipdb.set_trace()
 
-
         # Order amount
         quantity = self.quantity
 
@@ -452,16 +451,22 @@ class Trading():
         if ask price is greater than profit price, 
         buy with my buy price,    
         '''
-        if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
-           (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
-            self.logger.info ("MOde: {0}, Lastsk: {1}, Profit Sell Price {2}, ".format(self.option.mode, lastAsk, profitableSellingPrice))
-
-            if self.order_id == 0:
+        if(self.option.mode == 'auto'):
+            self.pastLastBid = self.pastLastBid or lastBid
+            if(lastBid >= (self.pastLastBid * 1.01)):
                 self.buy(symbol, quantity, buyPrice, profitableSellingPrice)
-
-                # Perform check/sell action
-                # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                # checkAction.start()
+            
+        else:
+            if (lastAsk >= profitableSellingPrice and self.option.mode == 'profit') or \
+               (lastPrice <= float(self.option.buyprice) and self.option.mode == 'range'):
+                self.logger.info ("MOde: {0}, Lastsk: {1}, Profit Sell Price {2}, ".format(self.option.mode, lastAsk, profitableSellingPrice))
+    
+                if self.order_id == 0:
+                    self.buy(symbol, quantity, buyPrice, profitableSellingPrice)
+    
+                    # Perform check/sell action
+                    # checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                    # checkAction.start()
 
     def logic(self):
         return 0
